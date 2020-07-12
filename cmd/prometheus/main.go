@@ -683,8 +683,8 @@ func main() {
 			func() error {
 				level.Info(logger).Log("msg", "Starting TSDB ...")
 				if cfg.tsdb.WALSegmentSize != 0 {
-					if cfg.tsdb.WALSegmentSize < 10*1024*1024 || cfg.tsdb.WALSegmentSize > 256*1024*1024 {
-						return errors.New("flag 'storage.tsdb.wal-segment-size' must be set between 10MB and 256MB")
+					if cfg.tsdb.WALSegmentSize < 1*1024*1024 || cfg.tsdb.WALSegmentSize > 256*1024*1024 {
+						return errors.New("flag 'storage.tsdb.wal-segment-size' must be set between 1MB and 256MB")
 					}
 				}
 				db, err := openDBWithMetrics(
@@ -695,6 +695,10 @@ func main() {
 				)
 				if err != nil {
 					return errors.Wrapf(err, "opening storage failed")
+				}
+
+				if cfg.tsdb.MinBlockDuration == cfg.tsdb.MaxBlockDuration {
+					db.DisableCompactions()
 				}
 
 				level.Info(logger).Log("fs_type", prom_runtime.Statfs(cfg.localStoragePath))
